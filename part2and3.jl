@@ -8,27 +8,24 @@ function clean(str)
         r"```@autodocs\n[\s\S]*?```" => "",
         r"```@meta\n[\s\S]*?```" => "",
         r"```@index\n[\s\S]*?```" => "",
-        r"```@example[\w\s;=]*?\n[\s\S]*?```" => "",
-        r"```@repl[\w\s;=]*?\n[\s\S]*?```" => "",
-        r"```@setup [\w]+\n[\s\S]*?```" => "",
+        r"```@example[A-Za-z0-9;=\s]*?\n[\s\S]*?```" => "",
+        r"```@repl[A-Za-z0-9;=\s]*?\n[\s\S]*?```" => "",
+        r"```@setup [A-Za-z0-9]+\n[\s\S]*?```" => "",
         r"```@eval\n[\s\S]*?```" => "",
-        r"```@raw [\w]+\n[\s\S]*?```" => ""
+        r"```@raw [A-Za-z0-9]+\n[\s\S]*?```" => ""
     )
 
     str = replace(str,
         r"```[A-Za-z]+\n```" => "", # empty code block
         r"```[A-Za-z]+\n[\s\S]*?\n```" => "", # code block
         r"```\n[\s\S]*?\n```" => "", # code block without title
-        r"```[^\n]+?```" => "", # one line code block
-        r"`[^\n]+?`" => "" # one line code block
+        r"```[\s\S]*?```" => "", # one line code block
+        r"`[\s\S]*?`" => "" # one line code block
     )
 
     str = replace(str,
         r"\n+" => " ", # new lines
-        r"<.*?>" => "", # html tag
-        r"<.*?/>" => "", # html tag
-        r"</.*?>" => "", # html tag
-        r"\[[\s\S]*?\]\(.*?\)" => "", # links
+        r"\[.*\]\(.*\)" => "", # links
         r"[^A-Za-z\s]" => "" # special chars and numbers
     )
 
