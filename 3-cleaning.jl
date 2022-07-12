@@ -1,4 +1,4 @@
-# Part 2 and 3: convert md files to txt files and data cleaning
+# Part 3: Data cleaning
 
 # utils
 const urlregex = r"[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)"

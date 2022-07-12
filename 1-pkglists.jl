@@ -1,4 +1,4 @@
-# Part 1.1: Generate package lists
+# Part 1: Generate package lists
 
 using TOML
 using GitHub

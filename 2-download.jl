@@ -1,4 +1,4 @@
-# Part 1.2: Download markdown files from packages hosted on GitHub
+# Part 2: Download markdown files from packages hosted on GitHub
 
 using GitHub
 using Downloads: download
