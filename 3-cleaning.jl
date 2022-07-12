@@ -40,6 +40,7 @@ function clean(str)
     strip(replace(str, r"\s{2,}" => " ")) # multiple spaces
 end
 
+# data cleaning
 ispath("TXTFiles") || mkdir("TXTFiles")
 ispath("TXTFiles/GitHubPkgs") || mkdir("TXTFiles/GitHubPkgs")
 
