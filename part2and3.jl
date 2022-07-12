@@ -1,6 +1,8 @@
 # Part 2 and 3: convert md files to txt files and data cleaning
 
 # utils
+const urlregex = r"[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)"
+
 function clean(str)
     # Documenter.jl syntax
     str = replace(str,
@@ -22,6 +24,9 @@ function clean(str)
         r"```[^\n]+?```" => "", # one line code block
         r"`[^\n]+?`" => "" # one line code block
     )
+
+    # url
+    str = replace(str, urlregex => "")
 
     str = replace(str,
         r"\n+" => " ", # new lines
