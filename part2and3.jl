@@ -48,7 +48,7 @@ for pkg in pkgs
     files = readdir("MDFiles/GitHubPkgs/$pkg")
     
     for file in files
-        text = read("MDFiles/GitHubPkgs/$pkg/$file")
+        text = read("MDFiles/GitHubPkgs/$pkg/$file", String)
         filename = first(splitext(file))
         write("$path/$filename.txt", clean(text))
     end
