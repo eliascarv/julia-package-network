@@ -12,9 +12,9 @@ function clean(str)
         r"^```@index\n[\s\S]*?```$"m => "",
         r"^```@example.*?\n[\s\S]*?```$"m => "",
         r"^```@repl.*?\n[\s\S]*?```$"m => "",
-        r"^```@setup [\w]+\n[\s\S]*?```$"m => "",
+        r"^```@setup \w+\n[\s\S]*?```$"m => "",
         r"^```@eval\n[\s\S]*?```$"m => "",
-        r"^```@raw [\w]+\n[\s\S]*?```$"m => "",
+        r"^```@raw \w+\n[\s\S]*?```$"m => "",
         r"^```jldoctest.*?\n[\s\S]*?```$"m => "",
     )
 
