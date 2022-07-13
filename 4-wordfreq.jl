@@ -26,15 +26,15 @@ for pkg in pkgs
 end
 
 # plot the 100 most frequently occurring words
-strpais = collect(strcount)
-sort!(strpais, by=p -> last(p), rev=true)
+counts = collect(strcount)
+sort!(counts, by=p -> last(p), rev=true)
 
-x = last.(strpais[1:100])
-labels = first.(strpais[1:100])
+x = last.(counts[1:100])
+labels = first.(counts[1:100])
 bar(x,
-    xticks=(1:length(labels), labels), 
-    xrotation=90, 
+    xticks=(1:100, labels), 
+    xrotation=90,
+    legend=false,
     size=(1400, 800),
     bottom_margin=10mm,
-    legend=false
 )
