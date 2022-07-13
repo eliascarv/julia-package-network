@@ -10,11 +10,12 @@ function clean(str)
         r"^```@autodocs\n[\s\S]*?```$"m => "",
         r"^```@meta\n[\s\S]*?```$"m => "",
         r"^```@index\n[\s\S]*?```$"m => "",
-        r"^```@example[\w\s;=]*?\n[\s\S]*?```$"m => "",
-        r"^```@repl[\w\s;=]*?\n[\s\S]*?```$"m => "",
+        r"^```@example.*?\n[\s\S]*?```$"m => "",
+        r"^```@repl.*?\n[\s\S]*?```$"m => "",
         r"^```@setup [\w]+\n[\s\S]*?```$"m => "",
         r"^```@eval\n[\s\S]*?```$"m => "",
-        r"^```@raw [\w]+\n[\s\S]*?```$"m => ""
+        r"^```@raw [\w]+\n[\s\S]*?```$"m => "",
+        r"^```jldoctest.*?\n[\s\S]*?```$"m => "",
     )
 
     str = replace(str,
