@@ -18,24 +18,31 @@ function clean(str)
         r"^```jldoctest.*?\n[\s\S]*?```$"m => "",
     )
 
+    # Markdown syntax
     str = replace(str,
-        r"^```[^\s\n]+?\n[\s\S]*?```$"m => "", # code block
-        r"^~~~[^\s\n]+?\n[\s\S]*?~~~$"m => "", # code block
-        r"^```\n[\s\S]*?```$"m => "", # code block without title
-        r"^~~~\n[\s\S]*?~~~$"m => "", # code block without title
-        r"```[^\n`]+?```" => "", # one line code block
-        r"`[^\n`]+?`" => "" # one line code block
+        # code blocks
+        r"^```[^\s\n]+?\n[\s\S]*?```$"m => "", # with title
+        r"^~~~[^\s\n]+?\n[\s\S]*?~~~$"m => "", # with title
+        r"^ *\n(( {4}|\t).+?\n?)+?$"m => "", # indented
+        r"^```\n[\s\S]*?```$"m => "", # without title
+        r"^~~~\n[\s\S]*?~~~$"m => "", # without title
+        r"```[^\n`]+?```" => "", # inline
+        r"`[^\n`]+?`" => "", # inline
+        # links
+        r"\[[^\[\]]*?\]\(.*?\)" => "",
+        r"^\[.+?\]: .+?$"m => "",
+        r"\[.+?\]\[.+?\]" => "",
+        # html tags
+        r"<.+?>" => "",
+        r"<.+?/>" => "",
+        r"</.+?>" => ""
     )
 
-    # url
+    # urls
     str = replace(str, urlregex => "")
 
     str = replace(str,
         r"\n+" => " ", # new lines
-        r"<.*?>" => "", # html tag
-        r"<.*?/>" => "", # html tag
-        r"</.*?>" => "", # html tag
-        r"\[[\s\S]*?\]\(.*?\)" => "", # links
         r"[^A-Za-z\s]" => "" # special chars and numbers
     )
 
