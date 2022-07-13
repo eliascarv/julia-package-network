@@ -1,28 +1,28 @@
 # Part 3: Data cleaning
 
 # utils
-const urlregex = r"[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)"
+const urlregex = r"https?:[\/\/www\.?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)"
 
 function clean(str)
     # Documenter.jl syntax
     str = replace(str,
-        r"```@docs\n[\s\S]*?```" => "",
-        r"```@autodocs\n[\s\S]*?```" => "",
-        r"```@meta\n[\s\S]*?```" => "",
-        r"```@index\n[\s\S]*?```" => "",
-        r"```@example[\w\s;=]*?\n[\s\S]*?```" => "",
-        r"```@repl[\w\s;=]*?\n[\s\S]*?```" => "",
-        r"```@setup [\w]+\n[\s\S]*?```" => "",
-        r"```@eval\n[\s\S]*?```" => "",
-        r"```@raw [\w]+\n[\s\S]*?```" => ""
+        r"^```@docs\n[\s\S]*?```$"m => "",
+        r"^```@autodocs\n[\s\S]*?```$"m => "",
+        r"^```@meta\n[\s\S]*?```$"m => "",
+        r"^```@index\n[\s\S]*?```$"m => "",
+        r"^```@example[\w\s;=]*?\n[\s\S]*?```$"m => "",
+        r"^```@repl[\w\s;=]*?\n[\s\S]*?```$"m => "",
+        r"^```@setup [\w]+\n[\s\S]*?```$"m => "",
+        r"^```@eval\n[\s\S]*?```$"m => "",
+        r"^```@raw [\w]+\n[\s\S]*?```$"m => ""
     )
 
     str = replace(str,
-        r"```[A-Za-z]+\n```" => "", # empty code block
-        r"```[A-Za-z]+\n[\s\S]*?\n```" => "", # code block
-        r"```\n[\s\S]*?\n```" => "", # code block without title
-        r"```[^\n]+?```" => "", # one line code block
-        r"`[^\n]+?`" => "" # one line code block
+        r"^```[^\s\n]+?\n```$"m => "", # empty code block
+        r"^```[^\s\n]+?\n[\s\S]*?\n```$"m => "", # code block
+        r"^```\n[\s\S]*?\n```$"m => "", # code block without title
+        r"```[^\n`]+?```" => "", # one line code block
+        r"`[^\n`]+?`" => "" # one line code block
     )
 
     # url
