@@ -19,9 +19,10 @@ function clean(str)
     )
 
     str = replace(str,
-        r"^```[^\s\n]+?\n```$"m => "", # empty code block
-        r"^```[^\s\n]+?\n[\s\S]*?\n```$"m => "", # code block
-        r"^```\n[\s\S]*?\n```$"m => "", # code block without title
+        r"^```[^\s\n]+?\n[\s\S]*?```$"m => "", # code block
+        r"^~~~[^\s\n]+?\n[\s\S]*?~~~$"m => "", # code block
+        r"^```\n[\s\S]*?```$"m => "", # code block without title
+        r"^~~~\n[\s\S]*?~~~$"m => "", # code block without title
         r"```[^\n`]+?```" => "", # one line code block
         r"`[^\n`]+?`" => "" # one line code block
     )
