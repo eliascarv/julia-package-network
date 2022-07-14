@@ -1,5 +1,4 @@
 # Part 1: Generate package lists
-
 using TOML
 using GitHub
 using Downloads: download
