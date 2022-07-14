@@ -31,17 +31,18 @@ function clean(str)
         # links
         r"\[[^\[\]]*?\]\(.*?\)" => "",
         r"^\[.+?\]: .+?$"m => "",
-        r"\[.+?\]\[.+?\]" => "",
-        # html tags
-        r"<style.*?>[\s\S]*?</style>" => "",
-        r"<script.*?>[\s\S]*?</script>" => "",
-        r"<code.*?>[\s\S]*?</code>" => "",
-        r"<.+?>" => "",
-        r"<.+?/>" => "",
-        r"</.+?>" => ""
+        r"\[.+?\]\[.+?\]" => ""
     )
 
-    # urls
+    # HTML syntax
+    str = replace(str,
+        r"<script.*?>[\s\S]*?</script>" => "",
+        r"<style.*?>[\s\S]*?</style>" => "",
+        r"<code.*?>[\s\S]*?</code>" => "",
+        r"<.+?>" => ""
+    )
+
+    # URLs
     str = replace(str, urlregex => "")
 
     str = replace(str,

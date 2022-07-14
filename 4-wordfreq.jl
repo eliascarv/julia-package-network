@@ -35,5 +35,5 @@ bar(x,
     xrotation=90,
     legend=false,
     size=(1400, 800),
-    bottom_margin=10mm,
+    bottom_margin=10mm
 )
