@@ -1,4 +1,4 @@
-# WIP
+# WIP: Embedding
 using Zygote
 using MLUtils
 using StatsBase
@@ -12,7 +12,7 @@ const words  = Vector{String}() # vocabulary
 const counts = Vector{Int}()
 
 const path = "TXTFiles/GitHubPkgs"
-const pkgs = readdir(path)[1:10]
+const pkgs = readdir(path)[1:100]
 
 for pkg in pkgs
     txts = readdir("$path/$pkg")
@@ -41,9 +41,8 @@ const wv = pweights(counts ./ sum(counts))
 # parameters
 const m = 3
 const d = 300
-# const k = 64
-const k = 16
-const η = 0.1
+const k = 64
+const η = 1.0
 
 function window(batch, i)
     r = min(i + m, length(batch))
@@ -92,3 +91,19 @@ for batch in loader
         end
     end
 end
+
+# Plot
+using Plots
+using TSne
+
+wordcount = 1:nw .=> counts
+sort!(wordcount, by=p -> last(p), rev=true)
+inds = first.(wordcount[1:500])
+
+v2d = tsne(hcat(params.v[inds]...)')
+
+scatter(v2d[:, 1], v2d[:, 2], ms=0, size=(1200, 800))
+
+anns = [(x, y, text(word, 10, :black, :center)) for (x, y, word) in eachrow(hcat(v2d, words[inds]))]
+annotate!(anns)
+savefig("words.png")
