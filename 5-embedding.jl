@@ -64,7 +64,7 @@ params = (
 # log(1) - log(1 + exp(-x))
 # -log(1 + exp(-x))
 # -log1p(exp(-x))
-logσ(x) = -log1p(exp(-x))
+logσ(x) = min(0, x) - log1p(exp(-abs(x)))
 
 Jₜ(vc, uo, us) = logσ(dot(uo, vc)) + sum(logσ(-dot(ui, vc)) for ui in us)
 
@@ -73,21 +73,24 @@ loader = DataLoader(tokens, batchsize=128)
 for batch in loader
     for i in eachindex(batch)
         wc, wo = window(batch, i)
-        wcind  = findfirst(==(wc), words)
-        woind  = findfirst(==(wo), words)
-        wsinds = sample(1:nw, wv, k, replace=false)
+
+        wcind = findfirst(==(wc), words)
+        woind = findfirst(==(wo), words)
+        
+        inds = setdiff(1:nw, [wcind, woind])
+        wsinds = sample(inds, wv[inds], k, replace=false)
         
         vc = params.v[wcind]
         uo = params.u[woind]
         us = params.u[wsinds]
 
+        # maximize Jₜ
         ∇vc, ∇uo, ∇us = gradient(Jₜ, vc, uo, us)
 
-        # maximize Jₜ
-        vc .= vc + η*∇vc
-        uo .= uo + η*∇uo
-        for i in eachindex(us)
-            us[i] .= us[i] + η*∇us[i]
+        params.v[wcind] = vc + η*∇vc
+        params.u[woind] = uo + η*∇uo
+        for (i, ui, ∇ui) in zip(wsinds, us, ∇us)
+            params.u[i] = ui + η*∇ui
         end
     end
 end
