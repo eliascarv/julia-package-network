@@ -68,7 +68,7 @@ logσ(x) = min(0, x) - log1p(exp(-abs(x)))
 
 Jₜ(vc, uo, us) = logσ(dot(uo, vc)) + sum(logσ(-dot(ui, vc)) for ui in us)
 
-loader = DataLoader(tokens, batchsize=128)
+loader = DataLoader(tokens, batchsize=128, shuffle=true)
 
 for batch in loader
     for i in eachindex(batch)
@@ -105,8 +105,12 @@ inds = first.(wordcount[1:500])
 
 v2d = tsne(hcat(params.v[inds]...)')
 
-scatter(v2d[:, 1], v2d[:, 2], ms=0, size=(1200, 800))
+scatter(v2d[:, 1], v2d[:, 2], 
+    ms=0, legend=false,
+    size=(1200, 800), 
+    dpi=400
+)
 
-anns = [(x, y, text(word, 10, :black, :center)) for (x, y, word) in eachrow(hcat(v2d, words[inds]))]
+anns = [(x, y, text(word, 10)) for (x, y, word) in eachrow(hcat(v2d, words[inds]))]
 annotate!(anns)
 savefig("words.png")
