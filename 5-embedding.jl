@@ -12,7 +12,7 @@ const words  = Vector{String}() # vocabulary
 const counts = Vector{Int}()
 
 const path = "TXTFiles/GitHubPkgs"
-const pkgs = readdir(path)[1:100]
+const pkgs = readdir(path)[1:10]
 
 for pkg in pkgs
     txts = readdir("$path/$pkg")
@@ -41,19 +41,28 @@ const wv = pweights(counts ./ sum(counts))
 # parameters
 const m = 3
 const d = 300
-const k = 64
-const η = 1.0
+const k = 60
+const η = 0.1
 
-function window(batch, i)
+# embedding
+function sampleinds(batch, i)
     r = min(i + m, length(batch))
     l = max(i - m, 1)
     
     iₒ = rand([l:i-1; i+1:r])
     
-    batch[i], batch[iₒ]
+    wc = batch[i]
+    wo = batch[iₒ]
+
+    wcind = findfirst(==(wc), words)
+    woind = findfirst(==(wo), words)
+
+    sinds  = setdiff(1:nw, wcind)
+    wsinds = sample(sinds, wv[sinds], k, replace=false)
+
+    wcind, woind, wsinds
 end
 
-# embedding
 dist = Uniform(-1, 1)
 params = (
     v = [rand(dist, d) for _ in words],
@@ -72,13 +81,7 @@ loader = DataLoader(tokens, batchsize=128, shuffle=true)
 
 for batch in loader
     for i in eachindex(batch)
-        wc, wo = window(batch, i)
-
-        wcind = findfirst(==(wc), words)
-        woind = findfirst(==(wo), words)
-        
-        inds = setdiff(1:nw, [wcind, woind])
-        wsinds = sample(inds, wv[inds], k, replace=false)
+        wcind, woind, wsinds = sampleinds(batch, i)
         
         vc = params.v[wcind]
         uo = params.u[woind]
