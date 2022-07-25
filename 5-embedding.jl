@@ -45,7 +45,7 @@ const k = 60
 const η = 0.1
 
 # embedding
-function sampleinds(batch, i)
+function wordinds(batch, i)
     r = min(i + m, length(batch))
     l = max(i - m, 1)
     
@@ -81,7 +81,7 @@ loader = DataLoader(tokens, batchsize=128, shuffle=true)
 
 for batch in loader
     for i in eachindex(batch)
-        wcind, woind, wsinds = sampleinds(batch, i)
+        wcind, woind, wsinds = wordinds(batch, i)
         
         vc = params.v[wcind]
         uo = params.u[woind]
