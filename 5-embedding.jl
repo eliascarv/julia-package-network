@@ -7,9 +7,9 @@ using LinearAlgebra
 
 using Random; Random.seed!(2)
 
-const tokens = Vector{String}() # corpus
-const words  = Vector{String}() # vocabulary
-const counts = Vector{Int}()
+const corpus = Vector{String}()
+const vocab  = Vector{String}()
+const wcount = Vector{Int}()
 
 const path = "TXTFiles/GitHubPkgs"
 const pkgs = readdir(path)[1:10]
@@ -20,23 +20,25 @@ for pkg in pkgs
     for txt in txts
         text = read("$path/$pkg/$txt", String)
         strs = split(text)
-        append!(tokens, strs)
+        append!(corpus, strs)
         
         for str in strs
-            if str ∈ words
-                i = findfirst(==(str), words)
-                counts[i] += 1
+            if str ∈ vocab
+                i = findfirst(==(str), vocab)
+                wcount[i] += 1
             else
-                push!(words, str)
-                push!(counts, 1)
+                push!(vocab, str)
+                push!(wcount, 1)
             end
         end
     end
 end
 
 # constants
-const nw = length(words)
-const wv = pweights(counts ./ sum(counts))
+const nw = length(vocab)
+const wordind = Dict(w => i for (i, w) in pairs(vocab))
+# Unigram Dist: U(w) = count(w) / length(corpus)
+const unidist = pweights(wcount ./ length(corpus))
 
 # parameters
 const m = 3
@@ -45,7 +47,7 @@ const k = 60
 const η = 0.1
 
 # embedding
-function wordinds(batch, i)
+function sampleinds(batch, i)
     r = min(i + m, length(batch))
     l = max(i - m, 1)
     
@@ -54,34 +56,35 @@ function wordinds(batch, i)
     wc = batch[i]
     wo = batch[iₒ]
 
-    wcind = findfirst(==(wc), words)
-    woind = findfirst(==(wo), words)
+    wcind = wordind[wc]
+    woind = wordind[wo]
 
-    sinds  = setdiff(1:nw, wcind)
-    wsinds = sample(sinds, wv[sinds], k, replace=false)
+    sinds  = setdiff(1:nw, [wcind, woind])
+    probs  = unidist[sinds]
+    wsinds = sample(sinds, probs, k, replace=false)
 
     wcind, woind, wsinds
 end
 
 dist = Uniform(-1, 1)
 params = (
-    v = [rand(dist, d) for _ in words],
-    u = [rand(dist, d) for _ in words]
+    v = [rand(dist, d) for _ in 1:nw],
+    u = [rand(dist, d) for _ in 1:nw]
 )
 
 # log(1 / (1 + exp(-x)))
 # log(1) - log(1 + exp(-x))
 # -log(1 + exp(-x))
 # -log1p(exp(-x))
-logσ(x) = min(0, x) - log1p(exp(-abs(x)))
+logσ(x) = -log1p(exp(-x))
 
 Jₜ(vc, uo, us) = logσ(dot(uo, vc)) + sum(logσ(-dot(ui, vc)) for ui in us)
 
-loader = DataLoader(tokens, batchsize=128, shuffle=true)
+loader = DataLoader(corpus, batchsize=128, shuffle=true)
 
 for batch in loader
     for i in eachindex(batch)
-        wcind, woind, wsinds = wordinds(batch, i)
+        wcind, woind, wsinds = sampleinds(batch, i)
         
         vc = params.v[wcind]
         uo = params.u[woind]
@@ -102,18 +105,18 @@ end
 using Plots
 using TSne
 
-wordcount = 1:nw .=> counts
+wordcount = 1:nw .=> wcount
 sort!(wordcount, by=p -> last(p), rev=true)
 inds = first.(wordcount[1:500])
 
 v2d = tsne(hcat(params.v[inds]...)')
 
-scatter(v2d[:, 1], v2d[:, 2], 
+scatter(v2d[:,1], v2d[:,2], 
     ms=0, legend=false,
     size=(1200, 800), 
     dpi=400
 )
 
-anns = [(x, y, text(word, 10)) for (x, y, word) in eachrow(hcat(v2d, words[inds]))]
+anns = [(x, y, text(word, 10)) for (x, y, word) in eachrow(hcat(v2d, vocab[inds]))]
 annotate!(anns)
 savefig("words.png")

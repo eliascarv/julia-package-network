@@ -37,8 +37,8 @@ end
 # parameters
 const m = 3
 const d = 300
-const k = 15
-const η = 0.1
+const k = 10
+const η = 0.2
 const t = 1e-3
 const α = 3/4
 
@@ -124,7 +124,7 @@ using TSne
 
 wordcount = 1:nw .=> wcount
 sort!(wordcount, by=p -> last(p), rev=true)
-inds = first.(wordcount[300:600])
+inds = first.(wordcount[1:500])
 
 v2d = tsne(hcat(params.v[inds]...)')
 
