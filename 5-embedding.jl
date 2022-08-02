@@ -43,8 +43,8 @@ const unidist = pweights(wcount ./ length(corpus))
 # parameters
 const m = 3
 const d = 300
-const k = 60
-const η = 0.1
+const k = 10
+const η = 0.3
 
 # embedding
 function sampleinds(batch, i)
@@ -66,7 +66,7 @@ function sampleinds(batch, i)
     wcind, woind, wsinds
 end
 
-dist = Uniform(-1, 1)
+dist = Uniform(-0.1, 0.1)
 params = (
     v = [rand(dist, d) for _ in 1:nw],
     u = [rand(dist, d) for _ in 1:nw]
@@ -93,10 +93,18 @@ for batch in loader
         # maximize Jₜ
         ∇vc, ∇uo, ∇us = gradient(Jₜ, vc, uo, us)
 
-        params.v[wcind] = vc + η*∇vc
-        params.u[woind] = uo + η*∇uo
-        for (i, ui, ∇ui) in zip(wsinds, us, ∇us)
-            params.u[i] = ui + η*∇ui
+        # new params
+        nvc = vc + η*∇vc
+        nuo = uo + η*∇uo
+        nus = map(us, ∇us) do ui, ∇ui
+            ui + η*∇ui
+        end
+
+        # update params
+        params.v[wcind] = nvc
+        params.u[woind] = nuo
+        for (i, nui) in zip(wsinds, nus)
+            params.u[i] = nui
         end
     end
 end
