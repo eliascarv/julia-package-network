@@ -7,12 +7,14 @@ using LinearAlgebra
 
 using Random; Random.seed!(2)
 
+hasnan(x) = any(isnan, x)
+
 const corpus = Vector{String}()
 const vocab  = Vector{String}()
 const wcount = Vector{Int}()
 
 const path = "TXTFiles/GitHubPkgs"
-const pkgs = readdir(path)[1:10]
+const pkgs = readdir(path)[1:50]
 
 for pkg in pkgs
     txts = readdir("$path/$pkg")
@@ -43,8 +45,8 @@ const unidist = pweights(wcount ./ length(corpus))
 # parameters
 const m = 3
 const d = 300
-const k = 60
-const η = 0.1
+const k = 10
+const η = 0.3
 
 # embedding
 function sampleinds(batch, i)
@@ -115,5 +117,32 @@ end
 
 # Plot
 using Plots
+using TSne
 
 plot(cumsum(objst))
+
+wordcount = 1:nw .=> wcount
+sort!(wordcount, by=p -> last(p), rev=true)
+inds = first.(wordcount[1:500])
+
+v2d = tsne(hcat(params.v[inds]...)')
+
+scatter(v2d[:,1], v2d[:,2], 
+    ms=0, legend=false,
+    size=(1200, 800), 
+    dpi=400
+)
+
+anns = [(x, y, text(word, 10)) for (x, y, word) in eachrow(hcat(v2d, vocab[inds]))]
+annotate!(anns)
+savefig("train1.png")
+
+# tests
+cosine(x, y) = dot(x, y) / (norm(x) * norm(y))
+
+function similar(word)
+    wi = wordind[word]
+    v = params.v[wi]
+    dists = map(vi -> cosine(v, vi), params.v[inds])
+    vocab[inds][sortperm(dists, rev=true)[1:10]]
+end
