@@ -1,9 +1,12 @@
 # Part 3: Data cleaning
 
 # utils
-const urlregex = r"https?:[\/\/www\.?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)"
+const urlregex = r"(https?:\/\/(www\.)?)?[a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)"i
 
 function clean(str)
+    # remove invadid chars
+    str = filter(isvalid, str)
+
     # Documenter.jl syntax
     str = replace(str,
         r"^```@docs\n[\s\S]*?```$"m => "",
@@ -28,6 +31,10 @@ function clean(str)
         r"^~~~\n[\s\S]*?~~~$"m => "", # without title
         r"```[^\n`]+?```" => "", # inline
         r"`[^\n`]+?`" => "", # inline
+        # math
+        r"^\$\$[\s\S]+?\$\$$"m => "", # block
+        r"\$[^\n`]+?\$" => "", # inline
+        r"``[^\n`]+?``" => "", # inline
         # links
         r"\[[^\[\]]*?\]\(.*?\)" => "",
         r"^\[.+?\]: .+?$"m => "",
@@ -42,15 +49,20 @@ function clean(str)
         r"<.+?>" => ""
     )
 
+    # .jl
+    str = replace(str, r".jl"i => "")
+
     # URLs
     str = replace(str, urlregex => "")
 
     str = replace(str,
         r"\n+" => " ", # new lines
-        r"[^A-Za-z\s]" => "" # special chars and numbers
+        r"[^A-Za-z\s]" => " " # special chars
     )
 
-    strip(replace(str, r"\s{2,}" => " ")) # multiple spaces
+    str = replace(str, r"\s{2,}" => " ") # multiple spaces
+
+    strip(lowercase(str)) 
 end
 
 # data cleaning
