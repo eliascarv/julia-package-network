@@ -46,7 +46,7 @@ const unidist = pweights(wcount ./ length(corpus))
 const m = 3
 const d = 300
 const k = 10
-const η = 0.3
+const η = 0.1
 
 # embedding
 function sampleinds(batch, i)
@@ -79,12 +79,13 @@ params = (
 # -log(1 + exp(-x))
 # -log1p(exp(-x))
 logσ(x) = -log1p(exp(-x))
+# logσ(x) = min(0, x) - log1p(exp(-abs(x)))
 
 Jₜ(vc, uo, us) = logσ(dot(uo, vc)) + sum(logσ(-dot(ui, vc)) for ui in us)
 
 loader = DataLoader(corpus, batchsize=128, shuffle=true)
 
-objst = BitVector()
+opt = BitVector()
 for batch in loader
     for i in eachindex(batch)
         wcind, woind, wsinds = sampleinds(batch, i)
@@ -105,7 +106,7 @@ for batch in loader
         end
 
         ny = Jₜ(nvc, nuo, nus)
-        push!(objst, ny > y)
+        push!(opt, ny > y)
 
         params.v[wcind] = nvc
         params.u[woind] = nuo
@@ -119,7 +120,7 @@ end
 using Plots
 using TSne
 
-plot(cumsum(objst))
+plot(cumsum(v ? 1 : -1 for v in opt), leg=false)
 
 wordcount = 1:nw .=> wcount
 sort!(wordcount, by=p -> last(p), rev=true)
@@ -135,14 +136,13 @@ scatter(v2d[:,1], v2d[:,2],
 
 anns = [(x, y, text(word, 10)) for (x, y, word) in eachrow(hcat(v2d, vocab[inds]))]
 annotate!(anns)
-savefig("train1.png")
+savefig("words.png")
 
 # tests
 cosine(x, y) = dot(x, y) / (norm(x) * norm(y))
 
-function similar(word)
-    wi = wordind[word]
-    v = params.v[wi]
-    dists = map(vi -> cosine(v, vi), params.v[inds])
-    vocab[inds][sortperm(dists, rev=true)[1:10]]
+function similar(word, n=10)
+    v = params.v[wordind[word]]
+    dists = map(vi -> cosine(v, vi), params.v)
+    vocab[sortperm(dists, rev=true)[1:n]]
 end
