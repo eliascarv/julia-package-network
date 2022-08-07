@@ -1,11 +1,10 @@
 # WIP: Embedding
+using Random
 using Zygote
 using MLUtils
 using StatsBase
 using Distributions
 using LinearAlgebra
-
-using Random; Random.seed!(2)
 
 hasnan(x) = any(isnan, x)
 
@@ -46,7 +45,7 @@ const unidist = pweights(wcount ./ length(corpus))
 const m = 3
 const d = 300
 const k = 10
-const η = 0.1
+const η = 0.3
 
 # embedding
 function sampleinds(batch, i)
@@ -68,6 +67,8 @@ function sampleinds(batch, i)
     wcind, woind, wsinds
 end
 
+Random.seed!(2)
+
 dist = Uniform(-0.1, 0.1)
 params = (
     v = [rand(dist, d) for _ in 1:nw],
@@ -85,16 +86,15 @@ Jₜ(vc, uo, us) = logσ(dot(uo, vc)) + sum(logσ(-dot(ui, vc)) for ui in us)
 
 loader = DataLoader(corpus, batchsize=128, shuffle=true)
 
-opt = BitVector()
+wy = Vector{Pair{NTuple{2,Int},Float64}}()
 for batch in loader
+    # batch = filter(w -> wcount[wordind[w]] > 6, batch)
     for i in eachindex(batch)
         wcind, woind, wsinds = sampleinds(batch, i)
         
         vc = params.v[wcind]
         uo = params.u[woind]
         us = params.u[wsinds]
-
-        y = Jₜ(vc, uo, us)
 
         # maximize Jₜ
         ∇vc, ∇uo, ∇us = gradient(Jₜ, vc, uo, us)
@@ -105,8 +105,8 @@ for batch in loader
             ui + η*∇ui
         end
 
-        ny = Jₜ(nvc, nuo, nus)
-        push!(opt, ny > y)
+        J = Jₜ(nvc, nuo, nus)
+        push!(wy, (wcind, woind) => J)
 
         params.v[wcind] = nvc
         params.u[woind] = nuo
@@ -120,7 +120,22 @@ end
 using Plots
 using TSne
 
-plot(cumsum(v ? 1 : -1 for v in opt), leg=false)
+y = last.(wy)
+plot(y, leg=false)
+
+n = length(wy)
+ym = [mean(y[i:min(i+99, n)]) for i in 1:100:n]
+plot(ym, leg=false)
+
+out = filter(p -> last(p) ≤ -5, wy[20000:end])
+ws, ys = first.(out), last.(out)
+wcs, wos = vocab[first.(ws)], vocab[last.(ws)]
+
+wcanns = [(x, y, text(w, 8)) for (x, y, w) in zip(1:length(wcs), ys, wcs)]
+scatter(ys, ms=0, anns=wcanns, leg=false)
+
+woanns = [(x, y, text(w, 8)) for (x, y, w) in zip(1:length(wos), ys, wos)]
+scatter(ys, ms=0, anns=woanns, leg=false)
 
 wordcount = 1:nw .=> wcount
 sort!(wordcount, by=p -> last(p), rev=true)
