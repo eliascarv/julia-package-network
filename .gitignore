@@ -3,4 +3,6 @@ Manifest.toml
 PkgLists
 MDFiles
 TXTFiles
-words.png
+corpus.txt
+model.txt
+word_cloud.png

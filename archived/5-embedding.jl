@@ -12,7 +12,7 @@ const vocab  = Vector{String}()
 const wcount = Vector{Int}()
 
 const path = "TXTFiles/GitHubPkgs"
-const pkgs = readdir(path)[1:50]
+const pkgs = readdir(path)[1:10]
 
 for pkg in pkgs
     txts = readdir("$path/$pkg")
@@ -66,7 +66,7 @@ function sampleinds(batch, i)
     wcind, woind, wsinds
 end
 
-dist = Uniform(-1, 1)
+dist = Uniform(-0.1, 0.1)
 params = (
     v = [rand(dist, d) for _ in 1:nw],
     u = [rand(dist, d) for _ in 1:nw]
@@ -76,23 +76,13 @@ params = (
 # log(1) - log(1 + exp(-x))
 # -log(1 + exp(-x))
 # -log1p(exp(-x))
-# logσ(x) = -log1p(exp(-x))
-logσ(x) = min(0, x) - log1p(exp(-abs(x)))
+logσ(x) = -log1p(exp(-x))
 
 Jₜ(vc, uo, us) = logσ(dot(uo, vc)) + sum(logσ(-dot(ui, vc)) for ui in us)
 
 loader = DataLoader(corpus, batchsize=128, shuffle=true)
 
-lastvc = params.v[1]
-lastuo = params.u[2]
-lastus = params.u[1:k]
-br = false
-
-hasnan(x) = any(isnan, x)
-
 for batch in loader
-    global br
-    br && break
     for i in eachindex(batch)
         wcind, woind, wsinds = sampleinds(batch, i)
         
@@ -100,26 +90,41 @@ for batch in loader
         uo = params.u[woind]
         us = params.u[wsinds]
 
-        global lastvc = copy(vc)
-        global lastuo = copy(uo)
-        global lastus = copy(us)
-
         # maximize Jₜ
         ∇vc, ∇uo, ∇us = gradient(Jₜ, vc, uo, us)
 
-        params.v[wcind] = vc + η*∇vc
-        params.u[woind] = uo + η*∇uo
-        for (i, ui, ∇ui) in zip(wsinds, us, ∇us)
-            params.u[i] = ui + η*∇ui
+        # new params
+        nvc = vc + η*∇vc
+        nuo = uo + η*∇uo
+        nus = map(us, ∇us) do ui, ∇ui
+            ui + η*∇ui
         end
 
-        if (
-            hasnan(params.v[wcind]) ||
-            hasnan(params.u[woind]) ||
-            any(i -> hasnan(params.u[i]), wsinds)
-        )
-            global br = true
-            break
+        # update params
+        params.v[wcind] = nvc
+        params.u[woind] = nuo
+        for (i, nui) in zip(wsinds, nus)
+            params.u[i] = nui
         end
     end
 end
+
+# Plot
+using Plots
+using TSne
+
+wordcount = 1:nw .=> wcount
+sort!(wordcount, by=p -> last(p), rev=true)
+inds = first.(wordcount[1:500])
+
+v2d = tsne(hcat(params.v[inds]...)')
+
+scatter(v2d[:,1], v2d[:,2], 
+    ms=0, legend=false,
+    size=(1200, 800), 
+    dpi=400
+)
+
+anns = [(x, y, text(word, 10)) for (x, y, word) in eachrow(hcat(v2d, vocab[inds]))]
+annotate!(anns)
+savefig("words.png")
